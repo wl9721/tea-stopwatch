@@ -6,7 +6,7 @@
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "any",
-  "description": "Simple tea stopwatch with 0.1 second display and one-tap reset/restart.",
+  "description": "Tea stopwatch with fixed hundredths display and configurable interval sound.",
   "icons": [
     {
       "src": "icon.svg",

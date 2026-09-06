@@ -1,268 +1,32 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>Tea Stopwatch V1.3</title>
-<style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-    overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-    user-select: none;
-    -webkit-user-select: none;
-    overscroll-behavior: none;
-  }
-
-  #app {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    padding:
-      env(safe-area-inset-top)
-      env(safe-area-inset-right)
-      env(safe-area-inset-bottom)
-      env(safe-area-inset-left);
-  }
-
-  #time {
-    color: #fff;
-    font-weight: 200;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    white-space: nowrap;
-    letter-spacing: -0.045em;
-    text-align: center;
-  }
-
-  #control {
-    border: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    outline: none;
-  }
-
-  #control.running {
-    background: #303030;
-    color: #fff;
-  }
-
-  #control.stopped {
-    background: #0b2c13;
-    color: #51d96b;
-  }
-
-  #control:active {
-    transform: scale(0.96);
-  }
-
-  @media (orientation: portrait) {
-    #app {
-      justify-content: flex-start;
-      padding-top: calc(env(safe-area-inset-top) + 22vh);
-    }
-
-    #time {
-      font-size: min(23vw, 20vh);
-    }
-
-    #control {
-      width: 150px;
-      height: 150px;
-      margin-top: 21vh;
-      font-size: 32px;
-    }
-  }
-
-  @media (orientation: landscape) {
-    #app {
-      justify-content: flex-start;
-      padding-top: calc(env(safe-area-inset-top) + 14vh);
-    }
-
-    #time {
-      font-size: min(23vw, 32vh);
-    }
-
-    #control {
-      width: 128px;
-      height: 128px;
-      margin-top: 10vh;
-      font-size: 28px;
-    }
-  }
-
-  #status {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: max(7px, env(safe-area-inset-bottom));
-    text-align: center;
-    font-size: 10px;
-    opacity: 0.16;
-    pointer-events: none;
-  }
-</style>
-</head>
-<body>
-<div id="app">
-  <div id="time">00:00.0</div>
-  <button id="control" class="stopped" aria-label="開始或重置">開始</button>
-  <div id="status"></div>
-</div>
-
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#000000"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Tea Stopwatch"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><title>Tea Stopwatch V1.3</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+#app{position:fixed;inset:0;width:100vw;height:100dvh;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#time{font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.045em;line-height:1;white-space:nowrap;text-align:center}
+.controls{display:flex;align-items:center;justify-content:center;gap:28px}.circle{border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:600;touch-action:manipulation}.circle:active{transform:scale(.96)}
+#reset{background:#303030;color:#fff}#stop{background:#3b1010;color:#ff5a5f}#stop.start{background:#0b2c13;color:#51d96b}
+#gear{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));border:0;background:transparent;color:#777;font-size:52px;padding:12px;opacity:.6;line-height:1}
+#panel{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:24px}#panel.show{display:flex}.card{width:min(420px,92vw);background:#151515;border:1px solid #333;border-radius:24px;padding:22px}.card h2{margin:0 0 18px;font-size:22px}.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid #2d2d2d}.row:last-of-type{border-bottom:0}label{font-size:17px}
+input[type=number]{font:inherit;background:#242424;color:#fff;border:1px solid #444;border-radius:10px;padding:8px 10px;min-width:110px}input[type=checkbox]{width:24px;height:24px}.actions{display:flex;gap:12px;margin-top:20px}.actions button{flex:1;border:0;border-radius:12px;padding:13px 16px;font:inherit;font-weight:600}#save{background:#0a84ff;color:#fff}#cancel{background:#303030;color:#fff}#hint{font-size:12px;color:#888;margin-top:12px;line-height:1.45}
+@media (orientation:portrait){#app{justify-content:flex-start;padding-top:calc(env(safe-area-inset-top) + 20vh)}#time{font-size:min(22vw,19vh)}.controls{margin-top:22vh}.circle{width:138px;height:138px;font-size:29px}}
+@media (orientation:landscape){#app{justify-content:flex-start;padding-top:calc(env(safe-area-inset-top) + 12vh)}#time{font-size:min(22vw,34vh)}.controls{margin-top:9vh}.circle{width:118px;height:118px;font-size:25px}}
+</style></head><body>
+<div id="app"><div id="time">00:00.00</div><div class="controls"><button id="reset" class="circle" type="button">重置</button><button id="stop" class="circle" type="button">停止</button></div><button id="gear" type="button" aria-label="設定">⚙︎</button></div>
+<div id="panel" aria-hidden="true"><div class="card"><h2>Tea Stopwatch 設定</h2><div class="row"><label for="soundOn">提示音</label><input id="soundOn" type="checkbox"></div><div class="row"><label for="interval">提示間隔（秒）</label><input id="interval" type="number" min="1" max="3600" step="1" value="20"></div><div class="actions"><button id="cancel" type="button">取消</button><button id="save" type="button">儲存</button></div><div id="hint">前景正常發聲；切到其他 App 或鎖屏後，計時繼續但背景不發聲。</div></div></div>
 <script>
-(() => {
-  const timeEl = document.getElementById('time');
-  const control = document.getElementById('control');
-  const statusEl = document.getElementById('status');
-
-  let running = false;
-  let startedAt = 0;
-  let stoppedElapsed = 0;
-  let wakeLock = null;
-  let pressTimer = null;
-  let longPressed = false;
-
-  function elapsedMs() {
-    return running ? performance.now() - startedAt : stoppedElapsed;
-  }
-
-  function formatTime(ms) {
-    const tenthsTotal = Math.floor(ms / 100);
-    const tenth = tenthsTotal % 10;
-    const secondsTotal = Math.floor(tenthsTotal / 10);
-    const sec = secondsTotal % 60;
-    const min = Math.floor(secondsTotal / 60);
-    return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${tenth}`;
-  }
-
-  function draw() {
-    timeEl.textContent = formatTime(elapsedMs());
-    requestAnimationFrame(draw);
-  }
-
-  function updateButton() {
-    if (running) {
-      control.textContent = '重置';
-      control.className = 'running';
-    } else {
-      control.textContent = '開始';
-      control.className = 'stopped';
-    }
-  }
-
-  async function requestWakeLock() {
-    if (!running) return;
-
-    if (!('wakeLock' in navigator)) {
-      statusEl.textContent = '螢幕常亮功能未支援';
-      return;
-    }
-
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      statusEl.textContent = '';
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } catch (_) {
-      statusEl.textContent = '螢幕常亮暫時無法啟用';
-    }
-  }
-
-  async function startFresh() {
-    stoppedElapsed = 0;
-    startedAt = performance.now();
-    running = true;
-    updateButton();
-    await requestWakeLock();
-  }
-
-  async function stopTimer() {
-    if (!running) return;
-    stoppedElapsed = performance.now() - startedAt;
-    running = false;
-    updateButton();
-
-    if (wakeLock) {
-      try { await wakeLock.release(); } catch (_) {}
-      wakeLock = null;
-    }
-  }
-
-  control.addEventListener('click', async (e) => {
-    e.preventDefault();
-    if (!longPressed) {
-      await startFresh();
-    }
-  });
-
-  control.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    longPressed = false;
-    clearTimeout(pressTimer);
-
-    pressTimer = setTimeout(async () => {
-      longPressed = true;
-      if (running) await stopTimer();
-      else await startFresh();
-    }, 850);
-  }, { passive: false });
-
-  control.addEventListener('pointerup', (e) => {
-    clearTimeout(pressTimer);
-
-    if (longPressed) {
-      e.preventDefault();
-      e.stopPropagation();
-      setTimeout(() => { longPressed = false; }, 50);
-    }
-  });
-
-  control.addEventListener('pointercancel', () => clearTimeout(pressTimer));
-  control.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && running && !wakeLock) {
-      await requestWakeLock();
-    }
-  });
-
-  window.addEventListener('pageshow', async () => {
-    if (running && !wakeLock) await requestWakeLock();
-  });
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
-    });
-  }
-
-  updateButton();
-  draw();
-})();
-</script>
-</body>
-</html>
+(()=>{const timeEl=document.getElementById('time'),resetBtn=document.getElementById('reset'),stopBtn=document.getElementById('stop'),gearBtn=document.getElementById('gear'),panel=document.getElementById('panel'),soundOnEl=document.getElementById('soundOn'),intervalEl=document.getElementById('interval'),saveBtn=document.getElementById('save'),cancelBtn=document.getElementById('cancel');
+let running=true,startedEpoch=Date.now(),accumulated=0,soundOn=localStorage.getItem('teaSoundOn')==='1',intervalSec=Math.max(1,Number(localStorage.getItem('teaInterval')||'20')),lastBeepIndex=0,audioCtx=null;
+function elapsedMs(){return running?accumulated+(Date.now()-startedEpoch):accumulated}
+function formatTime(ms){const t=Math.max(0,Math.floor(ms)),m=Math.floor(t/60000),s=Math.floor(t/1000)%60,h=Math.floor((t%1000)/10);return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${String(h).padStart(2,'0')}`}
+function beep(){if(!soundOn||document.visibilityState!=='visible')return;try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;g.gain.setValueAtTime(.10,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.08);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.08)}catch(e){}}
+function updateSound(){if(!running||!soundOn||document.visibilityState!=='visible')return;const idx=Math.floor(elapsedMs()/(intervalSec*1000));if(idx>0&&idx>lastBeepIndex){lastBeepIndex=idx;beep()}}
+function render(){timeEl.textContent=formatTime(elapsedMs());updateSound();requestAnimationFrame(render)}
+function setUI(){stopBtn.textContent=running?'停止':'開始';stopBtn.classList.toggle('start',!running)}
+function resetAndRun(){accumulated=0;startedEpoch=Date.now();running=true;lastBeepIndex=0;setUI()}
+function toggleStop(){if(running){accumulated=elapsedMs();running=false}else{startedEpoch=Date.now();running=true;lastBeepIndex=Math.floor(accumulated/(intervalSec*1000))}setUI()}
+resetBtn.addEventListener('click',resetAndRun);stopBtn.addEventListener('click',toggleStop);
+gearBtn.addEventListener('click',()=>{soundOnEl.checked=soundOn;intervalEl.value=String(intervalSec);panel.classList.add('show');panel.setAttribute('aria-hidden','false')});
+cancelBtn.addEventListener('click',()=>{panel.classList.remove('show');panel.setAttribute('aria-hidden','true')});
+saveBtn.addEventListener('click',()=>{soundOn=soundOnEl.checked;const n=Math.floor(Number(intervalEl.value));intervalSec=Number.isFinite(n)?Math.min(3600,Math.max(1,n)):20;localStorage.setItem('teaSoundOn',soundOn?'1':'0');localStorage.setItem('teaInterval',String(intervalSec));lastBeepIndex=Math.floor(elapsedMs()/(intervalSec*1000));panel.classList.remove('show');panel.setAttribute('aria-hidden','true')});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')lastBeepIndex=Math.floor(elapsedMs()/(intervalSec*1000))});
+if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}setUI();render()})();
+</script></body></html>

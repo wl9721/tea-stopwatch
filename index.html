@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Tea Stopwatch">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Tea Stopwatch V1.4</title>
+<title>Tea Stopwatch V1.5</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -24,21 +24,21 @@ html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden;font-f
 #stop{background:#3b1010;color:#ff5a5f}
 #stop.start{background:#0b2c13;color:#51d96b}
 #gear{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));border:0;background:transparent;color:#777;font-size:52px;padding:12px;opacity:.65;line-height:1}
-#panel{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:24px}
+#panel{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:18px;overflow:auto}
 #panel.show{display:flex}
-.card{width:min(440px,92vw);background:#151515;border:1px solid #333;border-radius:24px;padding:22px}
+.card{width:min(460px,94vw);background:#151515;border:1px solid #333;border-radius:24px;padding:22px;max-height:92dvh;overflow:auto}
 .card h2{margin:0 0 16px;font-size:22px}
-.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid #2d2d2d}
+.row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #2d2d2d}
 .row:last-of-type{border-bottom:0}
 label{font-size:17px}
-input[type=number]{font:inherit;background:#242424;color:#fff;border:1px solid #444;border-radius:10px;padding:8px 10px;min-width:110px}
+input[type=number],select{font:inherit;background:#242424;color:#fff;border:1px solid #444;border-radius:10px;padding:8px 10px;min-width:110px}
 input[type=checkbox]{width:24px;height:24px}
 .volWrap{display:flex;align-items:center;gap:10px;min-width:180px}
 input[type=range]{width:130px}
 #volumeValue{min-width:46px;text-align:right;font-variant-numeric:tabular-nums}
 .actions{display:flex;gap:12px;margin-top:18px}
 .actions button{flex:1;border:0;border-radius:12px;padding:13px 16px;font:inherit;font-weight:600}
-#testSound{background:#444;color:#fff;margin-top:14px;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:600}
+#testCue{background:#444;color:#fff;margin-top:14px;width:100%;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:600}
 #save{background:#0a84ff;color:#fff}
 #cancel{background:#303030;color:#fff}
 #hint{font-size:12px;color:#888;margin-top:12px;line-height:1.5}
@@ -53,6 +53,7 @@ input[type=range]{width:130px}
   #time{font-size:min(22vw,34vh)}
   .controls{margin-top:9vh}
   .circle{width:118px;height:118px;font-size:25px}
+  .card{max-height:88dvh}
 }
 </style>
 </head>
@@ -81,6 +82,17 @@ input[type=range]{width:130px}
     </div>
 
     <div class="row">
+      <label for="beepCount">提示音次數</label>
+      <select id="beepCount">
+        <option value="1">1 聲</option>
+        <option value="2" selected>2 聲</option>
+        <option value="3">3 聲</option>
+        <option value="4">4 聲</option>
+        <option value="5">5 聲</option>
+      </select>
+    </div>
+
+    <div class="row">
       <label for="volume">提示音音量</label>
       <div class="volWrap">
         <input id="volume" type="range" min="0" max="100" step="5" value="70">
@@ -89,11 +101,22 @@ input[type=range]{width:130px}
     </div>
 
     <div class="row">
-      <label for="flashOn">到點螢幕閃兩下</label>
+      <label for="flashOn">螢幕閃爍</label>
       <input id="flashOn" type="checkbox" checked>
     </div>
 
-    <button id="testSound" type="button">測試提示音</button>
+    <div class="row">
+      <label for="flashCount">閃爍次數</label>
+      <select id="flashCount">
+        <option value="1">1 次</option>
+        <option value="2" selected>2 次</option>
+        <option value="3">3 次</option>
+        <option value="4">4 次</option>
+        <option value="5">5 次</option>
+      </select>
+    </div>
+
+    <button id="testCue" type="button">測試目前提示</button>
 
     <div class="actions">
       <button id="cancel" type="button">取消</button>
@@ -101,9 +124,9 @@ input[type=range]{width:130px}
     </div>
 
     <div id="hint">
-      前景：依設定提示音＋可選螢幕閃兩下。<br>
+      前景：依設定發聲與閃爍。<br>
       切到其他 App 或鎖屏：計時繼續，但背景不發聲、不閃爍。<br>
-      提示音音量為 Tea Stopwatch 內部相對音量，不會改變 iPhone 系統音量。
+      音量百分比只控制 Tea Stopwatch 自身音量，不會改變 iPhone 系統音量。
     </div>
   </div>
 </div>
@@ -116,12 +139,15 @@ input[type=range]{width:130px}
   const stopBtn = document.getElementById('stop');
   const gearBtn = document.getElementById('gear');
   const panel = document.getElementById('panel');
+
   const soundOnEl = document.getElementById('soundOn');
   const intervalEl = document.getElementById('interval');
+  const beepCountEl = document.getElementById('beepCount');
   const volumeEl = document.getElementById('volume');
   const volumeValueEl = document.getElementById('volumeValue');
   const flashOnEl = document.getElementById('flashOn');
-  const testSoundBtn = document.getElementById('testSound');
+  const flashCountEl = document.getElementById('flashCount');
+  const testCueBtn = document.getElementById('testCue');
   const saveBtn = document.getElementById('save');
   const cancelBtn = document.getElementById('cancel');
 
@@ -131,10 +157,12 @@ input[type=range]{width:130px}
 
   let soundOn = localStorage.getItem('teaSoundOn') === '1';
   let intervalSec = Math.max(1, Number(localStorage.getItem('teaInterval') || '20'));
+  let beepCount = Math.min(5, Math.max(1, Number(localStorage.getItem('teaBeepCount') || '2')));
   let volumePct = Math.min(100, Math.max(0, Number(localStorage.getItem('teaVolume') || '70')));
   let flashOn = localStorage.getItem('teaFlashOn') !== '0';
+  let flashCount = Math.min(5, Math.max(1, Number(localStorage.getItem('teaFlashCount') || '2')));
 
-  let lastBeepIndex = 0;
+  let lastCueIndex = 0;
   let audioCtx = null;
 
   function elapsedMs() {
@@ -153,7 +181,6 @@ input[type=range]{width:130px}
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') await audioCtx.resume();
-
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       g.gain.value = 0.0001;
@@ -164,51 +191,60 @@ input[type=range]{width:130px}
     } catch (_) {}
   }
 
-  function playTone() {
-    if (!soundOn || document.visibilityState !== 'visible' || volumePct <= 0) return;
+  function playBeeps(count = beepCount, vol = volumePct) {
+    if (!soundOn || document.visibilityState !== 'visible' || vol <= 0) return;
 
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
 
-      const gainLevel = 0.24 * (volumePct / 100);
+      const gainLevel = 0.24 * (vol / 100);
 
-      // Double-beep for better audibility.
-      [0, 0.16].forEach(offset => {
+      for (let i = 0; i < count; i++) {
+        const offset = i * 0.16;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+
         osc.type = 'square';
         osc.frequency.value = 1800;
         gain.gain.setValueAtTime(Math.max(0.001, gainLevel), audioCtx.currentTime + offset);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + offset + 0.10);
+
         osc.connect(gain);
         gain.connect(audioCtx.destination);
+
         osc.start(audioCtx.currentTime + offset);
         osc.stop(audioCtx.currentTime + offset + 0.11);
-      });
+      }
     } catch (_) {}
   }
 
-  function flashTwice() {
+  function flashScreen(count = flashCount) {
     if (!flashOn || document.visibilityState !== 'visible') return;
-    const seq = [0, 110, 220, 330];
-    seq.forEach((delay, i) => {
-      setTimeout(() => app.classList.toggle('flash', i % 2 === 0), delay);
-    });
-    setTimeout(() => app.classList.remove('flash'), 450);
+
+    const onMs = 95;
+    const gapMs = 105;
+    const cycle = onMs + gapMs;
+
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => app.classList.add('flash'), i * cycle);
+      setTimeout(() => app.classList.remove('flash'), i * cycle + onMs);
+    }
+
+    setTimeout(() => app.classList.remove('flash'), count * cycle + 20);
   }
 
   function fireCue() {
-    playTone();
-    flashTwice();
+    playBeeps();
+    flashScreen();
   }
 
   function updateCue() {
     if (!running || document.visibilityState !== 'visible') return;
 
     const idx = Math.floor(elapsedMs() / (intervalSec * 1000));
-    if (idx > 0 && idx > lastBeepIndex) {
-      lastBeepIndex = idx;
+    if (idx > 0 && idx > lastCueIndex) {
+      lastCueIndex = idx;
       fireCue();
     }
   }
@@ -229,7 +265,7 @@ input[type=range]{width:130px}
     accumulated = 0;
     startedEpoch = Date.now();
     running = true;
-    lastBeepIndex = 0;
+    lastCueIndex = 0;
     setUI();
   }
 
@@ -242,7 +278,7 @@ input[type=range]{width:130px}
     } else {
       startedEpoch = Date.now();
       running = true;
-      lastBeepIndex = Math.floor(accumulated / (intervalSec * 1000));
+      lastCueIndex = Math.floor(accumulated / (intervalSec * 1000));
     }
 
     setUI();
@@ -253,11 +289,15 @@ input[type=range]{width:130px}
 
   gearBtn.addEventListener('click', async () => {
     await unlockAudio();
+
     soundOnEl.checked = soundOn;
     intervalEl.value = String(intervalSec);
+    beepCountEl.value = String(beepCount);
     volumeEl.value = String(volumePct);
     volumeValueEl.textContent = `${volumePct}%`;
     flashOnEl.checked = flashOn;
+    flashCountEl.value = String(flashCount);
+
     panel.classList.add('show');
     panel.setAttribute('aria-hidden','false');
   });
@@ -266,18 +306,26 @@ input[type=range]{width:130px}
     volumeValueEl.textContent = `${volumeEl.value}%`;
   });
 
-  testSoundBtn.addEventListener('click', async () => {
+  testCueBtn.addEventListener('click', async () => {
     await unlockAudio();
 
-    const oldSound = soundOn;
-    const oldVolume = volumePct;
+    const previewSoundOn = soundOnEl.checked;
+    const previewBeepCount = Number(beepCountEl.value);
+    const previewVolume = Number(volumeEl.value);
+    const previewFlashOn = flashOnEl.checked;
+    const previewFlashCount = Number(flashCountEl.value);
 
-    soundOn = true;
-    volumePct = Math.min(100, Math.max(0, Number(volumeEl.value || '70')));
-    playTone();
+    const oldSoundOn = soundOn;
+    const oldFlashOn = flashOn;
 
-    soundOn = oldSound;
-    volumePct = oldVolume;
+    soundOn = previewSoundOn;
+    flashOn = previewFlashOn;
+
+    playBeeps(previewBeepCount, previewVolume);
+    flashScreen(previewFlashCount);
+
+    soundOn = oldSoundOn;
+    flashOn = oldFlashOn;
   });
 
   cancelBtn.addEventListener('click', () => {
@@ -293,15 +341,19 @@ input[type=range]{width:130px}
     const n = Math.floor(Number(intervalEl.value));
     intervalSec = Number.isFinite(n) ? Math.min(3600, Math.max(1, n)) : 20;
 
+    beepCount = Math.min(5, Math.max(1, Number(beepCountEl.value)));
     volumePct = Math.min(100, Math.max(0, Number(volumeEl.value || '70')));
     flashOn = flashOnEl.checked;
+    flashCount = Math.min(5, Math.max(1, Number(flashCountEl.value)));
 
     localStorage.setItem('teaSoundOn', soundOn ? '1' : '0');
     localStorage.setItem('teaInterval', String(intervalSec));
+    localStorage.setItem('teaBeepCount', String(beepCount));
     localStorage.setItem('teaVolume', String(volumePct));
     localStorage.setItem('teaFlashOn', flashOn ? '1' : '0');
+    localStorage.setItem('teaFlashCount', String(flashCount));
 
-    lastBeepIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
+    lastCueIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
 
     panel.classList.remove('show');
     panel.setAttribute('aria-hidden','true');
@@ -310,7 +362,7 @@ input[type=range]{width:130px}
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       // No catch-up cue after returning from background.
-      lastBeepIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
+      lastCueIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
     }
   });
 

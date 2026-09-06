@@ -6,7 +6,7 @@
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "any",
-  "description": "Tea stopwatch with fixed hundredths display, configurable interval sound, volume, and screen flash.",
+  "description": "Tea stopwatch with configurable interval, beep count, volume, flash count, and background timing.",
   "icons": [
     {
       "src": "icon.svg",

@@ -6,11 +6,11 @@
         font-family="-apple-system,BlinkMacSystemFont,Helvetica Neue,Arial,sans-serif"
         font-size="88"
         font-weight="300">00:00.0</text>
-  <circle cx="256" cy="390" r="34" fill="#0b2c13"/>
+  <circle cx="256" cy="390" r="34" fill="#303030"/>
   <text x="256" y="402"
         text-anchor="middle"
-        fill="#51d96b"
+        fill="#ffffff"
         font-family="-apple-system,BlinkMacSystemFont,Helvetica Neue,Arial,sans-serif"
         font-size="28"
-        font-weight="600">茶</text>
+        font-weight="600">重置</text>
 </svg>

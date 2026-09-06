@@ -4,23 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#000000">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Tea Stopwatch">
-
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-
-<title>Tea Stopwatch</title>
-
+<title>Tea Stopwatch V1.3</title>
 <style>
   :root { color-scheme: dark; }
-
-  * {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
     margin: 0;
@@ -28,8 +17,7 @@
     height: 100%;
     background: #000;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-                 "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
     user-select: none;
     -webkit-user-select: none;
     overscroll-behavior: none;
@@ -91,11 +79,10 @@
     transform: scale(0.96);
   }
 
-  /* Portrait */
   @media (orientation: portrait) {
     #app {
       justify-content: flex-start;
-      padding-top: calc(env(safe-area-inset-top) + 23vh);
+      padding-top: calc(env(safe-area-inset-top) + 22vh);
     }
 
     #time {
@@ -105,28 +92,26 @@
     #control {
       width: 150px;
       height: 150px;
-      margin-top: 22vh;
+      margin-top: 21vh;
       font-size: 32px;
     }
   }
 
-  /* Landscape */
   @media (orientation: landscape) {
     #app {
-      justify-content: center;
-      flex-direction: row;
-      gap: 8vw;
+      justify-content: flex-start;
+      padding-top: calc(env(safe-area-inset-top) + 14vh);
     }
 
     #time {
-      font-size: min(18vw, 46vh);
+      font-size: min(23vw, 32vh);
     }
 
     #control {
-      width: 125px;
-      height: 125px;
-      font-size: 27px;
-      flex: 0 0 auto;
+      width: 128px;
+      height: 128px;
+      margin-top: 10vh;
+      font-size: 28px;
     }
   }
 
@@ -142,7 +127,6 @@
   }
 </style>
 </head>
-
 <body>
 <div id="app">
   <div id="time">00:00.0</div>
@@ -160,7 +144,6 @@
   let startedAt = 0;
   let stoppedElapsed = 0;
   let wakeLock = null;
-
   let pressTimer = null;
   let longPressed = false;
 
@@ -174,7 +157,6 @@
     const secondsTotal = Math.floor(tenthsTotal / 10);
     const sec = secondsTotal % 60;
     const min = Math.floor(secondsTotal / 60);
-
     return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${tenth}`;
   }
 
@@ -204,10 +186,7 @@
     try {
       wakeLock = await navigator.wakeLock.request('screen');
       statusEl.textContent = '';
-
-      wakeLock.addEventListener('release', () => {
-        wakeLock = null;
-      });
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
     } catch (_) {
       statusEl.textContent = '螢幕常亮暫時無法啟用';
     }
@@ -223,7 +202,6 @@
 
   async function stopTimer() {
     if (!running) return;
-
     stoppedElapsed = performance.now() - startedAt;
     running = false;
     updateButton();
@@ -234,9 +212,6 @@
     }
   }
 
-  // Short tap:
-  // stopped = start
-  // running = reset + immediately restart
   control.addEventListener('click', async (e) => {
     e.preventDefault();
     if (!longPressed) {
@@ -244,7 +219,6 @@
     }
   });
 
-  // Long press = stop / resume
   control.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     longPressed = false;
@@ -252,12 +226,8 @@
 
     pressTimer = setTimeout(async () => {
       longPressed = true;
-
-      if (running) {
-        await stopTimer();
-      } else {
-        await startFresh();
-      }
+      if (running) await stopTimer();
+      else await startFresh();
     }, 850);
   }, { passive: false });
 
@@ -271,14 +241,9 @@
     }
   });
 
-  control.addEventListener('pointercancel', () => {
-    clearTimeout(pressTimer);
-  });
-
+  control.addEventListener('pointercancel', () => clearTimeout(pressTimer));
   control.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // iOS may release Wake Lock when the app leaves foreground.
-  // Re-request when visible again.
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible' && running && !wakeLock) {
       await requestWakeLock();
@@ -286,12 +251,9 @@
   });
 
   window.addEventListener('pageshow', async () => {
-    if (running && !wakeLock) {
-      await requestWakeLock();
-    }
+    if (running && !wakeLock) await requestWakeLock();
   });
 
-  // Register service worker for offline use.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(() => {});

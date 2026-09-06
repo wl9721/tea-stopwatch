@@ -1,4 +1,4 @@
-const CACHE = 'tea-stopwatch-live-v1';
+const CACHE = 'tea-stopwatch-live-v1-3';
 
 const CORE = [
   './',
@@ -17,21 +17,12 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
-/*
-  Network first:
-  - If a new version exists on GitHub Pages, it is fetched immediately.
-  - If offline, the last cached version still works.
-*/
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 

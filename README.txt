@@ -1,37 +1,19 @@
-Tea Stopwatch｜GitHub Pages 上傳包
+Tea Stopwatch｜GitHub Pages 上傳包 V1.3
 
-這個資料夾已經準備好直接放到 GitHub Pages。
+本版重點：
+- 橫放時，圓形「重置 / 開始」按鈕改放在時間下方
+- 不再放在時間右側
 
 檔案：
-- index.html              主程式
-- manifest.webmanifest    PWA 設定
-- sw.js                   離線快取／更新
-- icon.svg                主畫面圖示
+- index.html
+- manifest.webmanifest
+- sw.js
+- icon.svg
+- README.txt
 
-第一次建立：
-1. GitHub 建立新 Repository，名稱建議：tea-stopwatch
-2. 把這 4 個檔案全部上傳到 Repository 根目錄
-3. Repository → Settings → Pages
-4. Build and deployment → Source 選 Deploy from a branch
-5. Branch 選 main
-6. Folder 選 / (root)
-7. Save
-8. 等 GitHub Pages 產生網址
-9. 用 iPhone Safari 開該網址
-10. Safari 分享 → 加入主畫面
-11. 若 iPhone 有開「直向鎖定」，先關掉，才能橫直自動切換
-
-之後改版：
-- 保持網址不變
-- 只要把新版 index.html（或其他有修改的檔案）覆蓋上傳
-- GitHub Pages 更新後，Tea Stopwatch 下次開啟會優先抓新版
-- 沒網路時仍會使用上一次快取的版本
-
-V1.2 目前操作：
-- 停止狀態：圓形「開始」
-- 計時中：圓形「重置」
-- 短按重置：00:00.0 並立即重新開始
-- 長按約 0.85 秒：停止／重新啟動
-- 顯示精度：0.1 秒
-- 直放、橫放自動排版
-- 計時中要求螢幕保持常亮
+更新方式：
+1. 打開你的 GitHub repository：tea-stopwatch
+2. 用這個新版本的 index.html / manifest.webmanifest / sw.js / icon.svg / README.txt 覆蓋原檔
+3. Commit changes
+4. 等 GitHub Pages 更新
+5. iPhone 主畫面上的 Tea Stopwatch 重新打開後就會使用新版

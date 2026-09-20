@@ -6,7 +6,7 @@
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "any",
-  "description": "Tea stopwatch with configurable interval, beep count, volume, flash count, and background timing.",
+  "description": "Tea stopwatch with configurable cues and 1-10 minute screen wake time.",
   "icons": [
     {
       "src": "icon.svg",

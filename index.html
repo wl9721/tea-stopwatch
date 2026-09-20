@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Tea Stopwatch">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Tea Stopwatch V1.5</title>
+<title>Tea Stopwatch V1.6</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -116,6 +116,14 @@ input[type=range]{width:130px}
       </select>
     </div>
 
+    <div class="row">
+      <label for="awakeMinutes">螢幕保持亮起</label>
+      <div class="volWrap">
+        <input id="awakeMinutes" type="range" min="1" max="10" step="1" value="5">
+        <span id="awakeValue">5 分</span>
+      </div>
+    </div>
+
     <button id="testCue" type="button">測試目前提示</button>
 
     <div class="actions">
@@ -126,7 +134,8 @@ input[type=range]{width:130px}
     <div id="hint">
       前景：依設定發聲與閃爍。<br>
       切到其他 App 或鎖屏：計時繼續，但背景不發聲、不閃爍。<br>
-      音量百分比只控制 Tea Stopwatch 自身音量，不會改變 iPhone 系統音量。
+      音量百分比只控制 Tea Stopwatch 自身音量，不會改變 iPhone 系統音量。<br>
+      螢幕保持亮起時間從每次「開始 / 重置」重新計算；到期後交回 iPhone 原本的自動鎖定機制。
     </div>
   </div>
 </div>
@@ -147,6 +156,8 @@ input[type=range]{width:130px}
   const volumeValueEl = document.getElementById('volumeValue');
   const flashOnEl = document.getElementById('flashOn');
   const flashCountEl = document.getElementById('flashCount');
+  const awakeMinutesEl = document.getElementById('awakeMinutes');
+  const awakeValueEl = document.getElementById('awakeValue');
   const testCueBtn = document.getElementById('testCue');
   const saveBtn = document.getElementById('save');
   const cancelBtn = document.getElementById('cancel');
@@ -161,9 +172,40 @@ input[type=range]{width:130px}
   let volumePct = Math.min(100, Math.max(0, Number(localStorage.getItem('teaVolume') || '70')));
   let flashOn = localStorage.getItem('teaFlashOn') !== '0';
   let flashCount = Math.min(5, Math.max(1, Number(localStorage.getItem('teaFlashCount') || '2')));
+  let awakeMinutes = Math.min(10, Math.max(1, Number(localStorage.getItem('teaAwakeMinutes') || '5')));
 
   let lastCueIndex = 0;
   let audioCtx = null;
+  let wakeLock = null;
+  let wakeTimer = null;
+
+  async function releaseWakeLock() {
+    if (wakeTimer) {
+      clearTimeout(wakeTimer);
+      wakeTimer = null;
+    }
+    if (wakeLock) {
+      try { await wakeLock.release(); } catch (_) {}
+      wakeLock = null;
+    }
+  }
+
+  async function armWakeLock() {
+    await releaseWakeLock();
+    if (!running || document.visibilityState !== 'visible' || !('wakeLock' in navigator)) return;
+
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      const ms = awakeMinutes * 60 * 1000;
+      wakeTimer = setTimeout(() => {
+        releaseWakeLock();
+      }, ms);
+
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+      });
+    } catch (_) {}
+  }
 
   function elapsedMs() {
     return running ? accumulated + (Date.now() - startedEpoch) : accumulated;
@@ -267,6 +309,7 @@ input[type=range]{width:130px}
     running = true;
     lastCueIndex = 0;
     setUI();
+    await armWakeLock();
   }
 
   async function toggleStop() {
@@ -275,10 +318,12 @@ input[type=range]{width:130px}
     if (running) {
       accumulated = elapsedMs();
       running = false;
+      await releaseWakeLock();
     } else {
       startedEpoch = Date.now();
       running = true;
       lastCueIndex = Math.floor(accumulated / (intervalSec * 1000));
+      await armWakeLock();
     }
 
     setUI();
@@ -297,6 +342,8 @@ input[type=range]{width:130px}
     volumeValueEl.textContent = `${volumePct}%`;
     flashOnEl.checked = flashOn;
     flashCountEl.value = String(flashCount);
+    awakeMinutesEl.value = String(awakeMinutes);
+    awakeValueEl.textContent = `${awakeMinutes} 分`;
 
     panel.classList.add('show');
     panel.setAttribute('aria-hidden','false');
@@ -304,6 +351,10 @@ input[type=range]{width:130px}
 
   volumeEl.addEventListener('input', () => {
     volumeValueEl.textContent = `${volumeEl.value}%`;
+  });
+
+  awakeMinutesEl.addEventListener('input', () => {
+    awakeValueEl.textContent = `${awakeMinutesEl.value} 分`;
   });
 
   testCueBtn.addEventListener('click', async () => {
@@ -345,6 +396,7 @@ input[type=range]{width:130px}
     volumePct = Math.min(100, Math.max(0, Number(volumeEl.value || '70')));
     flashOn = flashOnEl.checked;
     flashCount = Math.min(5, Math.max(1, Number(flashCountEl.value)));
+    awakeMinutes = Math.min(10, Math.max(1, Number(awakeMinutesEl.value)));
 
     localStorage.setItem('teaSoundOn', soundOn ? '1' : '0');
     localStorage.setItem('teaInterval', String(intervalSec));
@@ -352,17 +404,22 @@ input[type=range]{width:130px}
     localStorage.setItem('teaVolume', String(volumePct));
     localStorage.setItem('teaFlashOn', flashOn ? '1' : '0');
     localStorage.setItem('teaFlashCount', String(flashCount));
+    localStorage.setItem('teaAwakeMinutes', String(awakeMinutes));
 
     lastCueIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
+    if (running) await armWakeLock();
 
     panel.classList.remove('show');
     panel.setAttribute('aria-hidden','true');
   });
 
-  document.addEventListener('visibilitychange', () => {
+  document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
       // No catch-up cue after returning from background.
       lastCueIndex = Math.floor(elapsedMs() / (intervalSec * 1000));
+      if (running) await armWakeLock();
+    } else {
+      await releaseWakeLock();
     }
   });
 
